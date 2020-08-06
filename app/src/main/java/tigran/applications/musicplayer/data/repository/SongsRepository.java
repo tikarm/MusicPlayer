@@ -9,6 +9,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.ImageDecoder;
 import android.net.Uri;
 import android.provider.MediaStore;
+import android.util.Log;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
@@ -55,6 +56,8 @@ public class SongsRepository {
             int titleColumn = musicCursor.getColumnIndex(android.provider.MediaStore.Audio.Media.TITLE);
             int idColumn = musicCursor.getColumnIndex(android.provider.MediaStore.Audio.Media._ID);
             int artistColumn = musicCursor.getColumnIndex(android.provider.MediaStore.Audio.Media.ARTIST);
+            int durationColumn = musicCursor.getColumnIndex(MediaStore.Audio.Media.DURATION);
+            int albumColumn = musicCursor.getColumnIndex(MediaStore.Audio.Media.ALBUM);
             int albumId = musicCursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM_ID);
 
 
@@ -64,9 +67,12 @@ public class SongsRepository {
                 long thisAlbumId = musicCursor.getLong(albumId);
                 String thisTitle = musicCursor.getString(titleColumn);
                 String thisArtist = musicCursor.getString(artistColumn);
+                String thisAlbum = musicCursor.getString(albumColumn);
+                String thisDuration = musicCursor.getString(durationColumn);
                 Uri albumArtUri = getAlbumArtUri(thisAlbumId);
+                Log.e("TAG", "getAllAudioFiles: " + thisDuration);
 
-                songList.add(new Song(thisId, thisTitle, thisArtist, albumArtUri));
+                songList.add(new Song(thisId, thisTitle, thisArtist, thisAlbum, albumArtUri, thisDuration));
             } while (musicCursor.moveToNext());
         }
 

@@ -71,7 +71,7 @@ public class SongsFragment extends Fragment {
     private void initRecyclerView() {
         mRecyclerView = mBinding.rvSongsFragmentSongs;
 
-        mSongsAdapter = new SongsAdapter(getContext());
+        mSongsAdapter = new SongsAdapter(getContext(), requireActivity().getApplication());
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getContext());
         mRecyclerView.setLayoutManager(linearLayoutManager);
         mRecyclerView.setAdapter(mSongsAdapter);
