@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/songsFragment"
+    tools:ignore="UnusedNavigation">
+
+
+    <fragment
+        android:id="@+id/playerFragment"
+        android:name="tigran.applications.musicplayer.ui.base.PlayerFragment"
+        android:label="player_fragment"
+        tools:layout="@layout/player_fragment">
+        <action
+            android:id="@+id/action_playerFragment_to_songsFragment"
+            app:destination="@id/songsFragment"
+            app:enterAnim="@anim/fragment_close_enter"
+            app:exitAnim="@anim/fragment_close_exit"
+            app:popUpToInclusive="true" />
+    </fragment>
+    <fragment
+        android:id="@+id/songsFragment"
+        android:name="tigran.applications.musicplayer.ui.songs.SongsFragment"
+        android:label="songs_fragment"
+        tools:layout="@layout/songs_fragment">
+        <action
+            android:id="@+id/action_songsFragment_to_playerFragment"
+            app:destination="@id/playerFragment"
+            app:enterAnim="@anim/fragment_close_enter"
+            app:exitAnim="@anim/fragment_close_exit"
+            app:popUpToInclusive="true" />
+    </fragment>
+</navigation>
