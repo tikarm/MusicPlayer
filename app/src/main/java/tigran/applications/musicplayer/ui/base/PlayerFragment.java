@@ -4,12 +4,8 @@ import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.IBinder;
-import android.os.Message;
 import android.os.Messenger;
-import android.os.RemoteException;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,7 +16,6 @@ import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Observer;
-import androidx.lifecycle.ViewModelProvider;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
@@ -30,7 +25,6 @@ import tigran.applications.musicplayer.data.model.Song;
 import tigran.applications.musicplayer.databinding.PlayerFragmentBinding;
 import tigran.applications.musicplayer.helpers.TimeConverters;
 import tigran.applications.musicplayer.service.PlaySongService;
-import tigran.applications.musicplayer.ui.MainActivity;
 
 import static android.content.Context.BIND_AUTO_CREATE;
 
@@ -47,8 +41,7 @@ public class PlayerFragment extends Fragment {
 
     //service
     private Messenger mMessenger;
-    private Messenger mIncomingMessenger = new Messenger(new IncomingHandler());
-    private boolean isBound;
+    private boolean isBound = false;
 
     public static PlayerFragment newInstance() {
         return new PlayerFragment();
@@ -88,11 +81,13 @@ public class PlayerFragment extends Fragment {
             @Override
             public void onChanged(Song song) {
                 mSong = song;
-                playSong(song);
 
                 setViews();
 
                 setListeners();
+
+                mPlayerViewModel.playSong(song);
+                togglePlayView(true);
             }
         });
 
@@ -113,34 +108,21 @@ public class PlayerFragment extends Fragment {
         });
     }
 
-    private void setViews() {
-        mBinding.tvSongNamePlayerFragment.setText(mSong.getTitle());
-        mBinding.tvSongArtistPlayerFragment.setText(mSong.getArtist());
-        mBinding.tvSongAlbumPlayerFragment.setText(mSong.getAlbum());
-        mBinding.tvSongCompleteTimePlayerFragment.setText(mSong.getSongProperDuration());
-        if (mSong.getAlbumArtUri() != null) {
-            Glide.with(requireActivity())
-                    .applyDefaultRequestOptions(new RequestOptions()
-                            .placeholder(R.drawable.ic_song)
-                            .error(R.drawable.ic_song))
-                    .load(mSong.getAlbumArtUri())
-                    .into(mBinding.ivSongPicturePlayerFragment);
-        }
-    }
-
     private void setListeners() {
         mBinding.btnPlayPlayerFragment.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 if (mSong.isPlaying()) {
-                    mBinding.btnPlayPlayerFragment.setImageDrawable(ContextCompat.getDrawable(requireContext(), R.drawable.ic_play));
                     mSong.setPlaying(false);
-                    pauseSong();
+                    mPlayerViewModel.pauseSong();
+                    mPlayerViewModel.positionUpdates(false);
                 } else {
-                    mBinding.btnPlayPlayerFragment.setImageDrawable(ContextCompat.getDrawable(requireContext(), R.drawable.ic_pause));
                     mSong.setPlaying(true);
-                    playSong(mSong);
+//                    mPlayerViewModel.playSong(mSong);
+                    mPlayerViewModel.continueSong();
+                    mPlayerViewModel.positionUpdates(true);
                 }
+                togglePlayView(mSong.isPlaying());
             }
         });
 
@@ -159,7 +141,7 @@ public class PlayerFragment extends Fragment {
                 mBinding.tvSongCurrentTimePlayerFragment.setText(minutes + ":" + secondsString);
 
                 if (fromUser) {
-                    updateSongPosition(progress);
+                    mPlayerViewModel.updateSongPosition(progress);
                 }
             }
 
@@ -175,11 +157,32 @@ public class PlayerFragment extends Fragment {
         });
     }
 
+    private void setViews() {
+        mBinding.tvSongNamePlayerFragment.setText(mSong.getTitle());
+        mBinding.tvSongArtistPlayerFragment.setText(mSong.getArtist());
+        mBinding.tvSongAlbumPlayerFragment.setText(mSong.getAlbum());
+        mBinding.tvSongCompleteTimePlayerFragment.setText(mSong.getSongProperDuration());
+        if (mSong.getAlbumArtUri() != null) {
+            Glide.with(requireActivity())
+                    .applyDefaultRequestOptions(new RequestOptions()
+                            .placeholder(R.drawable.ic_song)
+                            .error(R.drawable.ic_song))
+                    .load(mSong.getAlbumArtUri())
+                    .into(mBinding.ivSongPicturePlayerFragment);
+        }
+    }
+
     private ServiceConnection mServiceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {       //argument service is used to communicate between
-            mMessenger = new Messenger(service);                                    //    service and activity
+            mMessenger = new Messenger(service);                                    //service and activity
             isBound = true;
+            mPlayerViewModel.initMessenger(mMessenger, isBound);
+            if (mSong != null) {
+                mPlayerViewModel.updateSongPosition(0);
+                mPlayerViewModel.playSong(mSong);
+                togglePlayView(true);
+            }
         }
 
         @Override
@@ -189,60 +192,11 @@ public class PlayerFragment extends Fragment {
         }
     };
 
-    static class IncomingHandler extends Handler {
-        @Override
-        public void handleMessage(Message msg) {
-            switch (msg.what) {
-
-            }
-        }
-    }
-
-    public void playSong(Song song) {
-        if (isBound) {
-            Log.d("MAIN", "position sent");
-            Message message = new Message();
-//            message.arg1 = song.getId();
-            message.what = PlaySongService.MESSAGE_PLAY;
-            message.obj = song;
-            message.replyTo = mIncomingMessenger;
-
-            try {
-                mMessenger.send(message);
-            } catch (RemoteException e) {
-                e.printStackTrace();
-            }
-        }
-        //unbindService(mServiceConnection);
-    }
-
-    public void pauseSong() {
-        if (isBound) {
-            Message message = new Message();
-            message.what = PlaySongService.MESSAGE_STOP;
-            message.obj = "String";
-            message.replyTo = mIncomingMessenger;
-            try {
-                mMessenger.send(message);
-            } catch (RemoteException e) {
-                e.printStackTrace();
-            }
-        }
-        //unbindService(mServiceConnection);
-    }
-
-    public void updateSongPosition(int position) {
-        if (isBound) {
-            Message message = new Message();
-            message.arg1 = position;
-            message.what = PlaySongService.MESSAGE_UPDATE_POSITION;
-            message.obj = "String";
-            message.replyTo = mIncomingMessenger;
-            try {
-                mMessenger.send(message);
-            } catch (RemoteException e) {
-                e.printStackTrace();
-            }
+    private void togglePlayView(boolean isPlaying) {
+        if (isPlaying) {
+            mBinding.btnPlayPlayerFragment.setImageDrawable(ContextCompat.getDrawable(requireContext(), R.drawable.ic_pause));
+        } else {
+            mBinding.btnPlayPlayerFragment.setImageDrawable(ContextCompat.getDrawable(requireContext(), R.drawable.ic_play));
         }
     }
 }

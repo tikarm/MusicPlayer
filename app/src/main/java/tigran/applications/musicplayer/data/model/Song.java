@@ -104,7 +104,11 @@ public class Song {
     }
 
     public String getSongProperDuration() {
-        return minutes + ":" + seconds;
+        String result = minutes + ":";
+        if (seconds < 10) {
+            result += 0;
+        }
+        return result + seconds;
     }
 
     private void convertDurationToMinutes(String duration) {

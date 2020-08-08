@@ -75,7 +75,7 @@ public class SongsAdapter extends RecyclerView.Adapter<SongsAdapter.SongViewHold
         holder.layout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                mPlayerViewModel.setCurrentSong(song);
+                mPlayerViewModel.setNewSong(song);
                 NavController navController = Navigation.findNavController((Activity) context, R.id.nav_host_fragment);
                 navController.navigate(R.id.action_songsFragment_to_playerFragment);
             }

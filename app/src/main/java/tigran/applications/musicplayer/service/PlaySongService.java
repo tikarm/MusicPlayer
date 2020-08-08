@@ -14,11 +14,8 @@ import android.os.PowerManager;
 import android.util.Log;
 
 import androidx.annotation.Nullable;
-import androidx.lifecycle.ViewModelProvider;
-import androidx.lifecycle.ViewModelStoreOwner;
 
 import tigran.applications.musicplayer.data.model.Song;
-import tigran.applications.musicplayer.ui.MainActivity;
 import tigran.applications.musicplayer.ui.base.PlayerViewModel;
 
 //bindService() --> onBind() --> onServiceConnected()
@@ -35,6 +32,9 @@ public class PlaySongService extends IntentService implements
     public static final int MESSAGE_NEXT = 103;
     public static final int MESSAGE_ADD_LIST = 104;
     public static final int MESSAGE_UPDATE_POSITION = 105;
+    public static final int MESSAGE_STOP_UPDATES = 106;
+    public static final int MESSAGE_START_UPDATES = 107;
+    public static final int MESSAGE_CONTINUE = 108;
 
     private MediaPlayer mMediaPlayer = new MediaPlayer();
     private Messenger mMessenger = new Messenger(new MessengerHandler()); //Any Message objects sent through this Messenger
@@ -45,6 +45,11 @@ public class PlaySongService extends IntentService implements
 
     //view-model
     private PlayerViewModel mPlayerViewModel;
+
+    //position update vars
+    private Handler mHandler = new Handler();
+    private Thread songPositionThread;
+    private boolean updateSongPosition = false;
 
     public PlaySongService() {
         super(PlaySongService.class.getSimpleName());
@@ -97,16 +102,44 @@ public class PlaySongService extends IntentService implements
         mMediaPlayer.prepareAsync();
     }
 
-    private void stopMusic() {
+    private void continueMusic() {
+        mMediaPlayer.seekTo(continueFromMillis);
+        mMediaPlayer.start();
+        setUpdateSongPosition(true);
+        startPositionUpdates();
+    }
+
+    private void pauseMusic() {
         if (mMediaPlayer != null) {
             mMediaPlayer.pause();
             continueFromMillis = mMediaPlayer.getCurrentPosition();
+            setUpdateSongPosition(false);
         }
     }
 
     private void updateSongPosition(int position) {
         continueFromMillis = position * 1000;
         mMediaPlayer.seekTo(position * 1000);
+    }
+
+    private void startPositionUpdates() {
+        songPositionThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                if (mMediaPlayer != null) {
+                    int currentPosition = mMediaPlayer.getCurrentPosition() / 1000;
+                    mPlayerViewModel.setCurrentSongPosition(currentPosition);
+                }
+                if (updateSongPosition) {
+                    mHandler.postDelayed(this, 1000);
+                }
+            }
+        });
+        songPositionThread.start();
+    }
+
+    public void setUpdateSongPosition(boolean updateSongPosition) {
+        this.updateSongPosition = updateSongPosition;
     }
 
     public void initMusicPlayer() {
@@ -138,8 +171,9 @@ public class PlaySongService extends IntentService implements
 
     @Override
     public void onPrepared(MediaPlayer mp) {
-        mp.start();
         mp.seekTo(continueFromMillis);
+        mp.start();
+        setUpdateSongPosition(true);
         startPositionUpdates();
     }
 
@@ -153,7 +187,10 @@ public class PlaySongService extends IntentService implements
                     Log.d("SERVICE", "PLAY");
                     break;
                 case MESSAGE_STOP:
-                    stopMusic();
+                    pauseMusic();
+                    break;
+                case MESSAGE_CONTINUE:
+                    continueMusic();
                     break;
                 case MESSAGE_PREV:
                 case MESSAGE_ADD_LIST:
@@ -162,23 +199,15 @@ public class PlaySongService extends IntentService implements
                 case MESSAGE_UPDATE_POSITION:
                     updateSongPosition(msg.arg1);
                     break;
+                case MESSAGE_STOP_UPDATES:
+                    setUpdateSongPosition(false);
+                    break;
+                case MESSAGE_START_UPDATES:
+                    setUpdateSongPosition(true);
+                    break;
             }
         }
     }
 
-    private Handler mHandler = new Handler();
 
-    private void startPositionUpdates() {
-        Thread thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                if (mMediaPlayer != null) {
-                    int currentPosition = mMediaPlayer.getCurrentPosition() / 1000;
-                    mPlayerViewModel.setCurrentSongPosition(currentPosition);
-                }
-                mHandler.postDelayed(this, 1000);
-            }
-        });
-        thread.start();
-    }
 }
