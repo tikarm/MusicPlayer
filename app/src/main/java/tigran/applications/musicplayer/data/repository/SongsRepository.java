@@ -61,6 +61,7 @@ public class SongsRepository {
             int albumId = musicCursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM_ID);
 
 
+            int songSequenceNumber = 0;
             //add songs to list
             do {
                 long thisId = musicCursor.getLong(idColumn);
@@ -72,7 +73,7 @@ public class SongsRepository {
                 Uri albumArtUri = getAlbumArtUri(thisAlbumId);
                 Log.e("TAG", "getAllAudioFiles: " + thisDuration);
 
-                songList.add(new Song(thisId, thisTitle, thisArtist, thisAlbum, albumArtUri, thisDuration));
+                songList.add(new Song(thisId, songSequenceNumber++, thisTitle, thisArtist, thisAlbum, albumArtUri, thisDuration));
             } while (musicCursor.moveToNext());
         }
 

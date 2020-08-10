@@ -8,6 +8,7 @@ import tigran.applications.musicplayer.helpers.TimeConverters;
 public class Song {
 
     private long id;
+    private int sequenceNumber;
     private String title;
     private String artist;
     private String album;
@@ -19,8 +20,9 @@ public class Song {
 
     private boolean isPlaying;
 
-    public Song(long id, String title, String artist, String album, Uri albumArtUri, String duration) {
+    public Song(long id, int sequenceNumber, String title, String artist, String album, Uri albumArtUri, String duration) {
         this.id = id;
+        this.sequenceNumber = sequenceNumber;
         this.title = title;
         this.artist = artist;
         this.album = album;
@@ -77,6 +79,14 @@ public class Song {
 
     public void setPlaying(boolean playing) {
         isPlaying = playing;
+    }
+
+    public int getSequenceNumber() {
+        return sequenceNumber;
+    }
+
+    public void setSequenceNumber(int sequenceNumber) {
+        this.sequenceNumber = sequenceNumber;
     }
 
     public String getDuration() {

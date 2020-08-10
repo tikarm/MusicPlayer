@@ -6,6 +6,8 @@ import android.os.Messenger;
 import android.os.RemoteException;
 import android.util.Log;
 
+import java.util.List;
+
 import tigran.applications.musicplayer.data.model.Song;
 import tigran.applications.musicplayer.service.PlaySongService;
 
@@ -34,6 +36,16 @@ public class PlayerRepository {
         isBound = bound;
     }
 
+    public void sendSongList(List<Song> songList) {
+        if (isBound) {
+            Message message = new Message();
+            message.what = PlaySongService.MESSAGE_ADD_LIST;
+            message.obj = songList;
+            message.replyTo = mIncomingMessenger;
+            sendMessage(message);
+        }
+    }
+
     public void playSong(Song song) {
         if (isBound) {
             song.setPlaying(true);
@@ -43,11 +55,7 @@ public class PlayerRepository {
             message.obj = song;
             message.replyTo = mIncomingMessenger;
 
-            try {
-                mMessenger.send(message);
-            } catch (RemoteException e) {
-                e.printStackTrace();
-            }
+            sendMessage(message);
         }
         //unbindService(mServiceConnection);
     }
@@ -60,11 +68,7 @@ public class PlayerRepository {
             message.obj = "String";
             message.replyTo = mIncomingMessenger;
 
-            try {
-                mMessenger.send(message);
-            } catch (RemoteException e) {
-                e.printStackTrace();
-            }
+            sendMessage(message);
         }
     }
 
@@ -74,11 +78,7 @@ public class PlayerRepository {
             message.what = PlaySongService.MESSAGE_STOP;
             message.obj = "String";
             message.replyTo = mIncomingMessenger;
-            try {
-                mMessenger.send(message);
-            } catch (RemoteException e) {
-                e.printStackTrace();
-            }
+            sendMessage(message);
         }
         //unbindService(mServiceConnection);
     }
@@ -90,11 +90,7 @@ public class PlayerRepository {
             message.what = PlaySongService.MESSAGE_UPDATE_POSITION;
             message.obj = "String";
             message.replyTo = mIncomingMessenger;
-            try {
-                mMessenger.send(message);
-            } catch (RemoteException e) {
-                e.printStackTrace();
-            }
+            sendMessage(message);
         }
     }
 
@@ -109,11 +105,26 @@ public class PlayerRepository {
             }
             message.obj = "String";
             message.replyTo = mIncomingMessenger;
-            try {
-                mMessenger.send(message);
-            } catch (RemoteException e) {
-                e.printStackTrace();
-            }
+            sendMessage(message);
+        }
+    }
+
+    public void playNextSong(int songSequenceNumber) {
+        if (isBound) {
+            Message message = new Message();
+            message.arg1 = songSequenceNumber;
+            message.what = PlaySongService.MESSAGE_NEXT;
+            message.obj = "String";
+            message.replyTo = mIncomingMessenger;
+            sendMessage(message);
+        }
+    }
+
+    private void sendMessage(Message message) {
+        try {
+            mMessenger.send(message);
+        } catch (RemoteException e) {
+            e.printStackTrace();
         }
     }
 

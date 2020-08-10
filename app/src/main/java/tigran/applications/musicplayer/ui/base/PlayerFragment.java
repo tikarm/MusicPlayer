@@ -17,14 +17,20 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Observer;
 
+import com.bumptech.glide.GenericTransitionOptions;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
+
+import java.util.List;
 
 import tigran.applications.musicplayer.R;
 import tigran.applications.musicplayer.data.model.Song;
 import tigran.applications.musicplayer.databinding.PlayerFragmentBinding;
+import tigran.applications.musicplayer.helpers.GlideApp;
+import tigran.applications.musicplayer.helpers.MyGlideApp;
 import tigran.applications.musicplayer.helpers.TimeConverters;
 import tigran.applications.musicplayer.service.PlaySongService;
+import tigran.applications.musicplayer.ui.songs.SongsViewModel;
 
 import static android.content.Context.BIND_AUTO_CREATE;
 
@@ -32,9 +38,12 @@ public class PlayerFragment extends Fragment {
 
     //song
     private Song mSong;
+    private List<Song> mSongList;
+    private boolean isSongChangedManually = false;
 
     //view-model
     private PlayerViewModel mPlayerViewModel;
+    private SongsViewModel mSongsViewModel;
 
     //view-binding
     private PlayerFragmentBinding mBinding;
@@ -74,12 +83,16 @@ public class PlayerFragment extends Fragment {
     private void initViewModel() {
         mPlayerViewModel = PlayerViewModel.getInstance(requireActivity().getApplication());
         mPlayerViewModel.init();
+        mSongsViewModel = SongsViewModel.getInstance(requireActivity().getApplication());
+        mPlayerViewModel.init();
     }
 
     private void subscribeObservers() {
         mPlayerViewModel.getCurrentSongMutableLiveData().observe(getViewLifecycleOwner(), new Observer<Song>() {
             @Override
             public void onChanged(Song song) {
+
+                //TODO save current song and its progress in prefs and when clicking on current song continue where left and don't start over
                 mSong = song;
 
                 setViews();
@@ -87,6 +100,7 @@ public class PlayerFragment extends Fragment {
                 setListeners();
 
                 mPlayerViewModel.playSong(song);
+                mPlayerViewModel.updateSongPosition(0);
                 togglePlayView(true);
             }
         });
@@ -101,9 +115,17 @@ public class PlayerFragment extends Fragment {
             @Override
             public void onChanged(Boolean isFinished) {
                 if (isFinished) {
-                    mBinding.btnPlayPlayerFragment.setImageDrawable(ContextCompat.getDrawable(requireContext(), R.drawable.ic_play));
-                    mSong.setPlaying(false);
+//                    mBinding.btnPlayPlayerFragment.setImageDrawable(ContextCompat.getDrawable(requireContext(), R.drawable.ic_play));
+//                    mSong.setPlaying(false);
                 }
+            }
+        });
+
+        mSongsViewModel.getSongsObservable().observe(getViewLifecycleOwner(), new Observer<List<Song>>() {
+            @Override
+            public void onChanged(List<Song> songs) {
+                mSongList = songs;
+                mPlayerViewModel.sendSongList(songs);
             }
         });
     }
@@ -118,11 +140,30 @@ public class PlayerFragment extends Fragment {
                     mPlayerViewModel.positionUpdates(false);
                 } else {
                     mSong.setPlaying(true);
-//                    mPlayerViewModel.playSong(mSong);
                     mPlayerViewModel.continueSong();
                     mPlayerViewModel.positionUpdates(true);
                 }
                 togglePlayView(mSong.isPlaying());
+            }
+        });
+
+        mBinding.btnRightPlayerFragment.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (mSongList != null && !mSongList.isEmpty() && mSong.getSequenceNumber() + 1 < mSongList.size()) {
+                    mSong.setPlaying(false);
+                    mPlayerViewModel.setNewSong(mSongList.get(mSong.getSequenceNumber() + 1));
+                }
+            }
+        });
+
+        mBinding.btnLeftPlayerFragment.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (mSongList != null && !mSongList.isEmpty() && mSong.getSequenceNumber() - 1 >= 0) {
+                    mSong.setPlaying(false);
+                    mPlayerViewModel.setNewSong(mSongList.get(mSong.getSequenceNumber() - 1));
+                }
             }
         });
 
@@ -163,11 +204,12 @@ public class PlayerFragment extends Fragment {
         mBinding.tvSongAlbumPlayerFragment.setText(mSong.getAlbum());
         mBinding.tvSongCompleteTimePlayerFragment.setText(mSong.getSongProperDuration());
         if (mSong.getAlbumArtUri() != null) {
-            Glide.with(requireActivity())
+            GlideApp.with(requireActivity())
                     .applyDefaultRequestOptions(new RequestOptions()
                             .placeholder(R.drawable.ic_song)
                             .error(R.drawable.ic_song))
                     .load(mSong.getAlbumArtUri())
+                    .transition(GenericTransitionOptions.with(R.anim.slide_in_left))
                     .into(mBinding.ivSongPicturePlayerFragment);
         }
     }

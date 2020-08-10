@@ -7,6 +7,8 @@ import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.MutableLiveData;
 
+import java.util.List;
+
 import tigran.applications.musicplayer.data.model.Song;
 import tigran.applications.musicplayer.data.repository.PlayerRepository;
 
@@ -57,6 +59,10 @@ public class PlayerViewModel extends AndroidViewModel {
         playerRepository.positionUpdates(state);
     }
 
+    public void playNextSong(int songSequenceNumber){
+        playerRepository.playNextSong(songSequenceNumber);
+    }
+
     public void initMessenger(Messenger messenger, boolean isBound) {
         playerRepository.setMessenger(messenger);
         playerRepository.setBound(isBound);
@@ -66,6 +72,10 @@ public class PlayerViewModel extends AndroidViewModel {
         positionUpdates(false);
         setCurrentSong(song);
         setCurrentSongPosition(0);
+    }
+
+    public void sendSongList(List<Song> songList){
+        playerRepository.sendSongList(songList);
     }
 
     public MutableLiveData<Song> getCurrentSongMutableLiveData() {

@@ -15,6 +15,7 @@
             android:layout_height="0dp"
             android:scaleType="fitXY"
             android:src="@drawable/ic_song"
+            android:layout_marginBottom="4dp"
             app:layout_constraintBottom_toTopOf="@id/cl_seekbar_player_fragment"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -31,7 +32,7 @@
                 android:id="@+id/cl_song_info_player_fragment"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
-                android:layout_marginBottom="8dp"
+                android:layout_marginBottom="4dp"
                 app:layout_constraintBottom_toTopOf="@id/cl_main_actions_player_fragment"
                 app:layout_constraintStart_toStartOf="parent">
 
@@ -90,7 +91,6 @@
                 android:id="@+id/cl_main_actions_player_fragment"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
                 android:paddingTop="16dp"
                 android:paddingBottom="16dp"
                 app:layout_constraintBottom_toBottomOf="parent">
@@ -127,7 +127,7 @@
                     android:id="@+id/btn_left_player_fragment"
                     android:layout_width="50dp"
                     android:layout_height="50dp"
-                    android:layout_marginStart="32dp"
+                    android:layout_marginStart="42dp"
                     android:src="@drawable/ic_rewind"
                     app:layout_constraintBottom_toBottomOf="@id/btn_play_player_fragment"
                     app:layout_constraintEnd_toStartOf="@id/btn_play_player_fragment"
@@ -148,7 +148,7 @@
                     android:id="@+id/btn_right_player_fragment"
                     android:layout_width="50dp"
                     android:layout_height="50dp"
-                    android:layout_marginEnd="32dp"
+                    android:layout_marginEnd="42dp"
                     android:src="@drawable/ic_forward"
                     app:layout_constraintBottom_toBottomOf="@id/btn_play_player_fragment"
                     app:layout_constraintEnd_toEndOf="parent"

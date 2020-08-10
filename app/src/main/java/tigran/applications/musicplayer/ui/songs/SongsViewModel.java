@@ -12,12 +12,21 @@ import tigran.applications.musicplayer.data.model.Song;
 import tigran.applications.musicplayer.data.repository.SongsRepository;
 
 public class SongsViewModel extends AndroidViewModel {
+    private static SongsViewModel instance;
+
     //live data
     MutableLiveData<List<Song>> songsObservable = new MutableLiveData<>();
 
     private SongsRepository songsRepository;
 
     private Application application;
+
+    public static SongsViewModel getInstance(Application application) {
+        if (instance == null) {
+            instance = new SongsViewModel(application);
+        }
+        return instance;
+    }
 
     public SongsViewModel(Application application) {
         super(application);

@@ -64,7 +64,7 @@ public class SongsFragment extends Fragment {
     }
 
     private void initViewModel() {
-        mSongsViewModel = new ViewModelProvider(requireActivity()).get(SongsViewModel.class);
+        mSongsViewModel = SongsViewModel.getInstance(requireActivity().getApplication());
         mSongsViewModel.init();
     }
 

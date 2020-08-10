@@ -15,6 +15,8 @@ import android.util.Log;
 
 import androidx.annotation.Nullable;
 
+import java.util.List;
+
 import tigran.applications.musicplayer.data.model.Song;
 import tigran.applications.musicplayer.ui.base.PlayerViewModel;
 
@@ -45,6 +47,12 @@ public class PlaySongService extends IntentService implements
 
     //view-model
     private PlayerViewModel mPlayerViewModel;
+
+    //song list
+    private List<Song> mSongList;
+
+    private int currentSongSequenceNumber;
+    private boolean songChangedManually;
 
     //position update vars
     private Handler mHandler = new Handler();
@@ -86,6 +94,7 @@ public class PlaySongService extends IntentService implements
 
     private void playMusic(Object object) {
         Song song = (Song) object;
+        setCurrentSongSequenceNumber(song.getSequenceNumber());
         mMediaPlayer.reset();
 
         //get id
@@ -138,9 +147,31 @@ public class PlaySongService extends IntentService implements
         songPositionThread.start();
     }
 
+    private void playNextSong(int songSequenceNumber) {
+        if (mSongList != null && !mSongList.isEmpty()) {
+            if (songSequenceNumber >= 0 && songSequenceNumber < mSongList.size()) {
+                Song song = mSongList.get(songSequenceNumber);
+                playMusic(song);
+            }
+        }
+    }
+
     public void setUpdateSongPosition(boolean updateSongPosition) {
         this.updateSongPosition = updateSongPosition;
     }
+
+    public void setSongList(List<Song> mSongList) {
+        this.mSongList = mSongList;
+    }
+
+    public int getCurrentSongSequenceNumber() {
+        return currentSongSequenceNumber;
+    }
+
+    public void setCurrentSongSequenceNumber(int currentSongSequenceNumber) {
+        this.currentSongSequenceNumber = currentSongSequenceNumber;
+    }
+
 
     public void initMusicPlayer() {
         //set player properties
@@ -158,10 +189,10 @@ public class PlaySongService extends IntentService implements
         mMediaPlayer.setOnErrorListener((MediaPlayer.OnErrorListener) this);
     }
 
+
     @Override
     public void onCompletion(MediaPlayer mp) {
         mPlayerViewModel.setCurrentSongFinished(true);
-
     }
 
     @Override
@@ -193,8 +224,6 @@ public class PlaySongService extends IntentService implements
                     continueMusic();
                     break;
                 case MESSAGE_PREV:
-                case MESSAGE_ADD_LIST:
-                case MESSAGE_NEXT:
                     break;
                 case MESSAGE_UPDATE_POSITION:
                     updateSongPosition(msg.arg1);
@@ -204,6 +233,12 @@ public class PlaySongService extends IntentService implements
                     break;
                 case MESSAGE_START_UPDATES:
                     setUpdateSongPosition(true);
+                    break;
+                case MESSAGE_ADD_LIST:
+                    setSongList((List<Song>) msg.obj);
+                    break;
+                case MESSAGE_NEXT:
+                    playNextSong(msg.arg1);
                     break;
             }
         }
