@@ -20,6 +20,7 @@ public class PlayerViewModel extends AndroidViewModel {
     MutableLiveData<Song> currentSongMutableLiveData = new MutableLiveData<>();
     MutableLiveData<Integer> currentSongPositionMutableLiveData = new MutableLiveData<>();
     MutableLiveData<Boolean> currentSongFinishedMutableLiveData = new MutableLiveData<>();
+    MutableLiveData<Integer> playNextOrPrevSongLiveData = new MutableLiveData<>();
 
     //repo
     PlayerRepository playerRepository;
@@ -100,5 +101,13 @@ public class PlayerViewModel extends AndroidViewModel {
 
     public void setCurrentSongFinished(Boolean finished) {
         currentSongFinishedMutableLiveData.postValue(finished);
+    }
+
+    public MutableLiveData<Integer> getPlayNextOrPrevSongLiveData() {
+        return playNextOrPrevSongLiveData;
+    }
+
+    public void setPlayNextOrPrevSong(Integer i) {
+        playNextOrPrevSongLiveData.postValue(i);
     }
 }

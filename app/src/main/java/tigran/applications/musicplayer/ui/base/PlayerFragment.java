@@ -3,13 +3,20 @@ package tigran.applications.musicplayer.ui.base;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.graphics.Bitmap;
+import android.graphics.ImageDecoder;
+import android.graphics.drawable.AnimatedVectorDrawable;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Messenger;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.SeekBar;
+import android.widget.Toolbar;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -17,17 +24,12 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Observer;
 
-import com.bumptech.glide.GenericTransitionOptions;
-import com.bumptech.glide.Glide;
-import com.bumptech.glide.request.RequestOptions;
-
+import java.io.IOException;
 import java.util.List;
 
 import tigran.applications.musicplayer.R;
 import tigran.applications.musicplayer.data.model.Song;
 import tigran.applications.musicplayer.databinding.PlayerFragmentBinding;
-import tigran.applications.musicplayer.helpers.GlideApp;
-import tigran.applications.musicplayer.helpers.MyGlideApp;
 import tigran.applications.musicplayer.helpers.TimeConverters;
 import tigran.applications.musicplayer.service.PlaySongService;
 import tigran.applications.musicplayer.ui.songs.SongsViewModel;
@@ -35,6 +37,9 @@ import tigran.applications.musicplayer.ui.songs.SongsViewModel;
 import static android.content.Context.BIND_AUTO_CREATE;
 
 public class PlayerFragment extends Fragment {
+
+    public static final int PLAY_NEXT = 1;
+    public static final int PLAY_PREV = 2;
 
     //song
     private Song mSong;
@@ -51,6 +56,9 @@ public class PlayerFragment extends Fragment {
     //service
     private Messenger mMessenger;
     private boolean isBound = false;
+
+    private boolean isNextClicked = false;
+    private boolean isPrevClicked = false;
 
     public static PlayerFragment newInstance() {
         return new PlayerFragment();
@@ -70,6 +78,8 @@ public class PlayerFragment extends Fragment {
         initViewModel();
 
         subscribeObservers();
+
+        initToolbar();
     }
 
     @Override
@@ -95,7 +105,8 @@ public class PlayerFragment extends Fragment {
                 //TODO save current song and its progress in prefs and when clicking on current song continue where left and don't start over
                 mSong = song;
 
-                setViews();
+                //TODO create another live data that will be responsible for setting views and animations
+                setViews(mSong);
 
                 setListeners();
 
@@ -104,6 +115,7 @@ public class PlayerFragment extends Fragment {
                 togglePlayView(true);
             }
         });
+
 
         mPlayerViewModel.getCurrentSongPositionMutableLiveData().observe(getViewLifecycleOwner(), new Observer<Integer>() {
             @Override
@@ -152,6 +164,7 @@ public class PlayerFragment extends Fragment {
             public void onClick(View view) {
                 if (mSongList != null && !mSongList.isEmpty() && mSong.getSequenceNumber() + 1 < mSongList.size()) {
                     mSong.setPlaying(false);
+                    isNextClicked = true;
                     mPlayerViewModel.setNewSong(mSongList.get(mSong.getSequenceNumber() + 1));
                 }
             }
@@ -162,6 +175,7 @@ public class PlayerFragment extends Fragment {
             public void onClick(View view) {
                 if (mSongList != null && !mSongList.isEmpty() && mSong.getSequenceNumber() - 1 >= 0) {
                     mSong.setPlaying(false);
+                    isPrevClicked = true;
                     mPlayerViewModel.setNewSong(mSongList.get(mSong.getSequenceNumber() - 1));
                 }
             }
@@ -198,21 +212,112 @@ public class PlayerFragment extends Fragment {
         });
     }
 
-    private void setViews() {
-        mBinding.tvSongNamePlayerFragment.setText(mSong.getTitle());
-        mBinding.tvSongArtistPlayerFragment.setText(mSong.getArtist());
-        mBinding.tvSongAlbumPlayerFragment.setText(mSong.getAlbum());
-        mBinding.tvSongCompleteTimePlayerFragment.setText(mSong.getSongProperDuration());
-        if (mSong.getAlbumArtUri() != null) {
-            GlideApp.with(requireActivity())
-                    .applyDefaultRequestOptions(new RequestOptions()
-                            .placeholder(R.drawable.ic_song)
-                            .error(R.drawable.ic_song))
-                    .load(mSong.getAlbumArtUri())
-                    .transition(GenericTransitionOptions.with(R.anim.slide_in_left))
-                    .into(mBinding.ivSongPicturePlayerFragment);
+    private void setViews(Song song) {
+        mBinding.tvSongNamePlayerFragment.setText(song.getTitle());
+        mBinding.tvSongArtistPlayerFragment.setText(song.getArtist());
+        mBinding.tvSongAlbumPlayerFragment.setText(song.getAlbum());
+        mBinding.tvSongCompleteTimePlayerFragment.setText(song.getSongProperDuration());
+        if (song.getAlbumArtUri() != null) {
+//            DrawableCrossFadeFactory factory =
+//                    new DrawableCrossFadeFactory.Builder().setCrossFadeEnabled(true).build();
+//            GlideApp.with(requireActivity())
+//                    .applyDefaultRequestOptions(new RequestOptions()
+//                            .placeholder(R.drawable.ic_song)
+//                            .error(R.drawable.ic_song))
+//                    .load(mSong.getAlbumArtUri())
+//                    .transition(DrawableTransitionOptions.withCrossFade(factory))
+//                    .diskCacheStrategy(DiskCacheStrategy.ALL)
+//                    .into(mBinding.ivSongPicturePlayerFragment);
+
+//            Picasso.get()
+//                    .load(song.getAlbumArtUri())
+//                    .fit()
+//                    .error(R.drawable.ic_song)
+//                    .into(mBinding.ivSongPicturePlayerFragment, new com.squareup.picasso.Callback() {
+//
+//                        @Override
+//                        public void onSuccess() {
+//                            Animation animSlide = null;
+//                            if (isNextClicked) {
+//                                isNextClicked = false;
+//                                animSlide = AnimationUtils.loadAnimation(getContext(),
+//                                        R.anim.slide_in_right);
+//                            } else if (isPrevClicked) {
+//                                isPrevClicked = false;
+//                                animSlide = AnimationUtils.loadAnimation(getContext(),
+//                                        R.anim.slide_in_left);
+//                                mBinding.ivSongPicturePlayerFragment.startAnimation(animSlide);
+//                            }
+//                            if (animSlide != null) {
+//                                mBinding.ivSongPicturePlayerFragment.startAnimation(animSlide);
+//                            }
+//
+//                        }
+//
+//                        @Override
+//                        public void onError(Exception e) {
+//                            Animation animSlide = null;
+//                            if (isNextClicked) {
+//                                isNextClicked = false;
+//                                animSlide = AnimationUtils.loadAnimation(getContext(),
+//                                        R.anim.slide_in_right);
+//                            } else if (isPrevClicked) {
+//                                isPrevClicked = false;
+//                                animSlide = AnimationUtils.loadAnimation(getContext(),
+//                                        R.anim.slide_in_left);
+//                                mBinding.ivSongPicturePlayerFragment.startAnimation(animSlide);
+//                            }
+//                            if (animSlide != null) {
+//                                mBinding.ivSongPicturePlayerFragment.startAnimation(animSlide);
+//                            }
+//                        }
+//                    });
+
+            ImageDecoder.Source source = null;
+            Bitmap bitmap = null;
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+                source = ImageDecoder.createSource(requireActivity().getContentResolver(), song.getAlbumArtUri());
+                try {
+                    bitmap = ImageDecoder.decodeBitmap(source);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            if (bitmap != null) {
+                mBinding.ivSongPicturePlayerFragment.setImageBitmap(bitmap);
+            } else {
+                mBinding.ivSongPicturePlayerFragment.setImageDrawable(ContextCompat.getDrawable(requireContext(), R.drawable.ic_song));
+            }
+
+            Animation animSlide = null;
+            if (isNextClicked) {
+                isNextClicked = false;
+                animSlide = AnimationUtils.loadAnimation(getContext(),
+                        R.anim.slide_in_right);
+            } else if (isPrevClicked) {
+                isPrevClicked = false;
+                animSlide = AnimationUtils.loadAnimation(getContext(),
+                        R.anim.slide_in_left);
+                mBinding.ivSongPicturePlayerFragment.startAnimation(animSlide);
+            }
+            if (animSlide != null) {
+                mBinding.ivSongPicturePlayerFragment.startAnimation(animSlide);
+            }
         }
     }
+
+    private void initToolbar() {
+        mBinding.appbarPlayerFragment.bringToFront();
+        mBinding.toolbarPlayerFragment.inflateMenu(R.menu.menu_player);
+        mBinding.toolbarPlayerFragment.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                return false;
+            }
+        });
+    }
+
 
     private ServiceConnection mServiceConnection = new ServiceConnection() {
         @Override
@@ -235,10 +340,11 @@ public class PlayerFragment extends Fragment {
     };
 
     private void togglePlayView(boolean isPlaying) {
-        if (isPlaying) {
-            mBinding.btnPlayPlayerFragment.setImageDrawable(ContextCompat.getDrawable(requireContext(), R.drawable.ic_pause));
-        } else {
-            mBinding.btnPlayPlayerFragment.setImageDrawable(ContextCompat.getDrawable(requireContext(), R.drawable.ic_play));
-        }
+        AnimatedVectorDrawable d = (AnimatedVectorDrawable) ContextCompat.getDrawable(requireContext(), R.drawable.btn_click);
+        AnimatedVectorDrawable d1 = (AnimatedVectorDrawable) ContextCompat.getDrawable(requireContext(), R.drawable.btn_click1);
+
+        AnimatedVectorDrawable drawable = isPlaying ? d : d1;
+        mBinding.btnPlayPlayerFragment.setBackground(drawable);
+        drawable.start();
     }
 }

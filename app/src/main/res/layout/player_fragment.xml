@@ -9,13 +9,29 @@
         android:background="@drawable/purple_background"
         tools:context="tigran.applications.musicplayer.ui.base.PlayerFragment">
 
+        <com.google.android.material.appbar.AppBarLayout
+            android:id="@+id/appbar_player_fragment"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@null"
+            app:elevation="0dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <Toolbar
+                android:id="@+id/toolbar_player_fragment"
+                android:layout_width="match_parent"
+                android:layout_height="?attr/actionBarSize" />
+
+        </com.google.android.material.appbar.AppBarLayout>
+
         <ImageView
             android:id="@+id/iv_song_picture_player_fragment"
             android:layout_width="match_parent"
             android:layout_height="0dp"
+            android:layout_marginBottom="4dp"
             android:scaleType="fitXY"
             android:src="@drawable/ic_song"
-            android:layout_marginBottom="4dp"
             app:layout_constraintBottom_toTopOf="@id/cl_seekbar_player_fragment"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -100,6 +116,8 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="16dp"
+                    android:progressTint="@color/colorPlayerText"
+                    android:thumbTint="@color/colorPlayerText"
                     app:layout_constraintBottom_toTopOf="@id/btn_play_player_fragment"
                     app:layout_constraintStart_toStartOf="parent" />
 
@@ -123,33 +141,39 @@
                     app:layout_constraintTop_toBottomOf="@id/seekbar_player_fragment"
                     tools:text="3:33" />
 
-                <ImageView
+                <Button
                     android:id="@+id/btn_left_player_fragment"
+                    style="@style/Widget.AppCompat.Button.Borderless"
                     android:layout_width="50dp"
                     android:layout_height="50dp"
                     android:layout_marginStart="42dp"
-                    android:src="@drawable/ic_rewind"
+                    android:background="@drawable/ic_rewind"
+                    android:foreground="?attr/selectableItemBackground"
                     app:layout_constraintBottom_toBottomOf="@id/btn_play_player_fragment"
                     app:layout_constraintEnd_toStartOf="@id/btn_play_player_fragment"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="@+id/btn_play_player_fragment" />
 
-                <ImageView
+                <ImageButton
                     android:id="@+id/btn_play_player_fragment"
+                    style="@style/Widget.AppCompat.Button.Borderless"
                     android:layout_width="80dp"
                     android:layout_height="80dp"
                     android:layout_marginTop="8dp"
-                    android:src="@drawable/ic_play"
+                    android:background="@drawable/ic_play"
+                    android:foreground="?attr/selectableItemBackground"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toStartOf="@id/btn_right_player_fragment"
                     app:layout_constraintStart_toEndOf="@id/btn_left_player_fragment" />
 
-                <ImageView
+                <ImageButton
                     android:id="@+id/btn_right_player_fragment"
+                    style="@style/Widget.AppCompat.Button.Borderless"
                     android:layout_width="50dp"
                     android:layout_height="50dp"
                     android:layout_marginEnd="42dp"
-                    android:src="@drawable/ic_forward"
+                    android:background="@drawable/ic_forward"
+                    android:foreground="?attr/selectableItemBackground"
                     app:layout_constraintBottom_toBottomOf="@id/btn_play_player_fragment"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toEndOf="@id/btn_play_player_fragment"
